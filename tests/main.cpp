@@ -1,5 +1,4 @@
 #include <greatest/greatest.h>
-
 #include <json11/json11.cpp>
 extern "C"
 {

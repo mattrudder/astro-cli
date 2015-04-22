@@ -7,19 +7,21 @@ extern "C"
 #include <fs/fs.h>
 }
 
+#include "version.h"
+
 namespace astro
 {
   struct package
   {
     const char* name;
-    const char* version;
     const char* repo;
+    version version;
 
-    static package from_file(const char* path);
-    static package from_string(const char* str);
+    static package from_file(const char* path, allocator alloc = allocator());
+    static package from_string(const char* str, allocator alloc = allocator());
   };
 
-  package package::from_file(const char* path)
+  package package::from_file(const char* path, allocator alloc)
   {
     memory_pool pool = {};
     package result = {};
@@ -33,7 +35,7 @@ namespace astro
     return result;
   }
 
-  package package::from_string(const char* str)
+  package package::from_string(const char* str, allocator alloc)
   {
     package result = {};
 
@@ -41,8 +43,10 @@ namespace astro
     auto json = json11::Json::parse(str, err);
 
     result.name = strdup(json["name"].string_value().c_str());
-    result.version = strdup(json["version"].string_value().c_str());
     result.repo = strdup(json["repo"].string_value().c_str());
+
+    const char* ver = strdup(json["version"].string_value().c_str());
+    result.version = version::parse(ver);
 
     return result;
   }

@@ -1,10 +1,8 @@
-#include <greatest/greatest.h>
-
 #include "package.h"
 
 const char* pkg_str = "{\n"
   "  \"name\": \"astro-cli\",\n"
-  "  \"version\": \"0.0.1\",\n"
+  "  \"version\": \"1.2.3\",\n"
   "  \"repo\": \"team-astro/astro-cli\",\n"
   "  \"description\": \"Project generation for Astro\",\n"
   "  \"keywords\": [\"astro\", \"generator\"],\n"
@@ -20,11 +18,11 @@ const char* pkg_str = "{\n"
 TEST package_should_parse()
 {
   astro::package pkg = astro::package::from_string(pkg_str);
-  GREATEST_ASSERT_STR_EQ("astro-cli", pkg.name);
-  GREATEST_ASSERT_STR_EQ("0.0.1", pkg.version); // TODO: parse
-  GREATEST_ASSERT_STR_EQ("team-astro/astro-cli", pkg.repo);
-
-
+  ASSERT_STR_EQ("astro-cli", pkg.name);
+  ASSERT_STR_EQ("team-astro/astro-cli", pkg.repo);
+  ASSERT_EQ(1, pkg.version.major);
+  ASSERT_EQ(2, pkg.version.minor);
+  ASSERT_EQ(3, pkg.version.patch);
 
   PASS();
 }
