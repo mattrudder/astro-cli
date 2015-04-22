@@ -11,10 +11,12 @@ else
 	OS=windows
 endif
 
+program_VERSION := $(shell node -pe "require('./package.json').version")
+
 libgit2_CFLAGS := $(shell pkg-config --cflags --static libgit2)
 libgit2_LDFLAGS := $(shell pkg-config --libs libgit2)
 
-CXXFLAGS += $(libgit2_CFLAGS)
+CXXFLAGS += $(libgit2_CFLAGS) -DASTRO_VERSION="$(program_VERSION)"
 LDFLAGS += $(libgit2_LDFLAGS) -all_load
 
 INCLUDE_DIRS := src deps ../astro/include
