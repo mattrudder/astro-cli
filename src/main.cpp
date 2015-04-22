@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <git2.h>
 
+#include <json11/json11.cpp>
 extern "C"
 {
-#include <commander/commander.h>
 #include <commander/commander.c>
+#include <fs/fs.c>
 }
 
 struct options_t
@@ -22,6 +23,15 @@ int main(int argc, char *argv[])
 
   cmd.data = &options;
   command_parse(&cmd, argc, argv);
+
+  if (!fs_exists("package.json"))
+  {
+    char* str = fs_read("package.json");
+    printf("package.json:\n%s", str);
+    std::string err;
+    auto json = json11::Json::parse(str, err);
+    printf("name: %s", json["name"].string_value().c_str());
+  }
 
   git_libgit2_init();
 
