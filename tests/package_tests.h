@@ -24,6 +24,8 @@ TEST package_should_parse()
   ASSERT_EQ(2, pkg.version.minor);
   ASSERT_EQ(3, pkg.version.patch);
 
+  ASSERT_EQ(3, pkg.dependency_count);
+
   PASS();
 }
 

@@ -16,8 +16,11 @@ program_VERSION := $(shell node -pe "require('./package.json').version")
 libgit2_CFLAGS := $(shell pkg-config --cflags --static libgit2)
 libgit2_LDFLAGS := $(shell pkg-config --libs libgit2)
 
-CXXFLAGS += $(libgit2_CFLAGS) -DASTRO_CLI_VERSION="\"$(program_VERSION)\""
-LDFLAGS += $(libgit2_LDFLAGS) -all_load
+libcurl_CFLAGS := $(shell curl-config --cflags)
+libcurl_LDFLAGS := $(shell curl-config --libs)
+
+CXXFLAGS += $(libgit2_CFLAGS) $(libcurl_CFLAGS) -DASTRO_CLI_VERSION="\"$(program_VERSION)\""
+LDFLAGS += $(libgit2_LDFLAGS) $(libcurl_LDFLAGS) -all_load
 
 INCLUDE_DIRS := src deps ../astro/include
 LIBRARY_DIRS :=
