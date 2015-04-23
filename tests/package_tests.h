@@ -1,5 +1,6 @@
 #include "package.h"
 
+const char* ref_str = "foo@1.2.3";
 const char* pkg_str = "{\n"
   "  \"name\": \"astro-cli\",\n"
   "  \"version\": \"1.2.3\",\n"
@@ -15,16 +16,36 @@ const char* pkg_str = "{\n"
   "  }\n"
   "}";
 
+#define ASSERT_VERSION_EQ(x, y, z, v) \
+  ASSERT_EQ(x, v.major);  \
+  ASSERT_EQ(y, v.minor);  \
+  ASSERT_EQ(z, v.patch);
+
 TEST package_should_parse()
 {
-  astro::package pkg = astro::package::from_string(pkg_str);
+  astro::package pkg = astro::package_from_json(pkg_str);
   ASSERT_STR_EQ("astro-cli", pkg.name);
   ASSERT_STR_EQ("team-astro/astro-cli", pkg.repo);
-  ASSERT_EQ(1, pkg.version.major);
-  ASSERT_EQ(2, pkg.version.minor);
-  ASSERT_EQ(3, pkg.version.patch);
+  ASSERT_VERSION_EQ(1, 2, 3, pkg.version)
 
   ASSERT_EQ(3, pkg.dependency_count);
+
+  ASSERT_STR_EQ("clibs/commander", pkg.dependencies[0].name);
+  ASSERT_STR_EQ("jwerle/fs.c", pkg.dependencies[1].name);
+  ASSERT_STR_EQ("thlorenz/log.h", pkg.dependencies[2].name);
+
+  ASSERT_VERSION_EQ(1, 3, 2, pkg.dependencies[0].version);
+  ASSERT_VERSION_EQ(0, 1, 2, pkg.dependencies[1].version);
+  ASSERT_VERSION_EQ(0, 3, 0, pkg.dependencies[2].version);
+
+  PASS();
+}
+
+TEST package_ref_should_parse()
+{
+  astro::package_ref ref = astro::package_ref_parse(ref_str);
+  ASSERT_STR_EQ("foo", ref.name);
+  ASSERT_VERSION_EQ(1, 2, 3, ref.version);
 
   PASS();
 }
@@ -35,4 +56,5 @@ SUITE(package_tests)
   // SET_TEARDOWN(teardown_cb, voidp_to_callback_data);
 
   RUN_TEST(package_should_parse);
+  RUN_TEST(package_ref_should_parse);
 }

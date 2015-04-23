@@ -12,7 +12,7 @@ extern "C"
 
 namespace astro
 {
-  struct dependency
+  struct package_ref
   {
     const char* name;
     version version;
@@ -25,26 +25,36 @@ namespace astro
     version version;
 
     uint16 dependency_count;
-    dependency* dependencies;
-
-    static package from_file(const char* path, allocator alloc = allocator::malloc());
-    static package from_string(const char* str, allocator alloc = allocator::malloc());
+    package_ref* dependencies;
   };
 
-  package package::from_file(const char* path, allocator alloc)
+  static constexpr char package_ref_separator = '@';
+
+  inline package_ref
+  package_ref_parse(const char* str, allocator alloc = allocator::malloc())
   {
-    package result = {};
-    if (!fs_exists(path))
+    package_ref result = {};
+    const char* version = strchr(str, package_ref_separator);
+    if (version)
     {
-      char* str = fs_read(path);
-      result = package::from_string(str, alloc);
-      free(str);
+      version += 1;
+      size_t name_len = strlen(str) - strlen(version);
+      result.version = version_parse(version);
+      char* name = (char*)alloc.allocate(name_len);
+      strncpy(name, str, name_len);
+      name[name_len - 1] = '\0';
+      result.name = name;
+    }
+    else
+    {
+      result.name = strdup(str, alloc);
     }
 
     return result;
   }
 
-  package package::from_string(const char* str, allocator alloc)
+  inline package
+  package_from_json(const char* str, allocator alloc = allocator::malloc())
   {
     package result = {};
 
@@ -55,19 +65,33 @@ namespace astro
     result.repo = strdup(json["repo"].string_value().c_str(), alloc);
 
     const char* ver = strdup(json["version"].string_value().c_str(), alloc);
-    result.version = version::parse(ver);
+    result.version = version_parse(ver);
 
     auto deps = json["dependencies"].object_items();
     result.dependency_count = deps.size();
-    result.dependencies = (dependency*) alloc.allocate(result.dependency_count * sizeof(dependency));
+    result.dependencies = (package_ref*) alloc.allocate(result.dependency_count * sizeof(package_ref));
 
-    dependency* dep = result.dependencies;
+    package_ref* ref = result.dependencies;
     for (auto&& d : deps)
     {
-      dep->name = strdup(d.first.c_str(), alloc);
-      dep->version = version::parse(d.second.string_value().c_str());
+      ref->name = strdup(d.first.c_str(), alloc);
+      ref->version = version_parse(d.second.string_value().c_str());
 
-      ++dep;
+      ++ref;
+    }
+
+    return result;
+  }
+
+  inline package
+  package_from_file(const char* path, allocator alloc = allocator::malloc())
+  {
+    package result = {};
+    if (!fs_exists(path))
+    {
+      char* str = fs_read(path);
+      result = package_from_json(str, alloc);
+      free(str);
     }
 
     return result;

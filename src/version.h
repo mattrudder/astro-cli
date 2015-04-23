@@ -8,15 +8,12 @@ namespace astro
     uint16 major;
     uint16 minor;
     uint16 patch;
-
-    static version parse(const char* input);
-    static const char* to_string(version ver, allocator alloc = allocator::malloc());
   };
 
   const char* version_fmt = "%d.%d.%d";
 
   inline version
-  version::parse(const char* input)
+  version_parse(const char* input)
   {
     version result = {};
 
@@ -28,7 +25,7 @@ namespace astro
   }
 
   inline const char*
-  version::to_string(version ver, allocator alloc)
+  version_to_string(version ver, allocator alloc = allocator::malloc())
   {
     int size = std::snprintf(nullptr, 0, version_fmt, ver.major, ver.minor, ver.patch) + 1;
     char* result = (char*)alloc.allocate(size);

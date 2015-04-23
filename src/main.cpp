@@ -32,14 +32,14 @@ int main(int argc, char *argv[])
 
   if (!fs_exists("package.json"))
   {
-    auto pkg = package::from_file("package.json");
+    auto pkg = package_from_file("package.json");
 
     log_info("Updating package %s", pkg.name);
 
     auto deps = pkg.dependencies;
     for (uintptr i = 0; i < pkg.dependency_count; ++i, ++deps)
       log_info("Found dependency %s, version %s",
-        deps->name, version::to_string(deps->version));
+        deps->name, version_to_string(deps->version));
 
   }
 
