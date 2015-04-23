@@ -18,6 +18,19 @@ struct options_t
 {
 };
 
+void print_library_dependencies()
+{
+  auto curl_version = curl_version_info(CURLVERSION_NOW);
+  log_debug("libcurl %s (%s) %s libz/%s",
+    curl_version->version, curl_version->host, curl_version->ssl_version,
+    curl_version->libz_version);
+
+  int git_version[3];
+  git_libgit2_version(git_version, git_version+1, git_version+2);
+  log_debug("libgit2 %d.%d.%d",
+    git_version[0], git_version[1], git_version[2]);
+}
+
 int main(int argc, char *argv[])
 {
   options_t options;
@@ -40,11 +53,12 @@ int main(int argc, char *argv[])
     for (uintptr i = 0; i < pkg.dependency_count; ++i, ++deps)
       log_info("Found dependency %s, version %s",
         deps->name, version_to_string(deps->version));
-
   }
 
-  curl_global_init(CURL_GLOBAL_DEFAULT);
+  curl_global_init(CURL_GLOBAL_ALL);
   git_libgit2_init();
+
+  print_library_dependencies();
 
   git_config *cfg = NULL;
   int error = git_config_open_default(&cfg);
