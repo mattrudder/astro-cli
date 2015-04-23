@@ -1,6 +1,5 @@
 #include "package.h"
 
-const char* ref_str = "foo@1.2.3";
 const char* pkg_str = "{\n"
   "  \"name\": \"astro-cli\",\n"
   "  \"version\": \"1.2.3\",\n"
@@ -43,9 +42,13 @@ TEST package_should_parse()
 
 TEST package_ref_should_parse()
 {
-  astro::package_ref ref = astro::package_ref_parse(ref_str);
+  astro::package_ref ref = astro::package_ref_parse("foo@1.2.3");
   ASSERT_STR_EQ("foo", ref.name);
   ASSERT_VERSION_EQ(1, 2, 3, ref.version);
+
+  ref = astro::package_ref_parse("bar");
+  ASSERT_STR_EQ("bar", ref.name);
+  ASSERT_VERSION_EQ(0, 0, 0, ref.version);
 
   PASS();
 }

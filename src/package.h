@@ -34,20 +34,23 @@ namespace astro
   package_ref_parse(const char* str, allocator alloc = allocator::malloc())
   {
     package_ref result = {};
-    const char* version = strchr(str, package_ref_separator);
-    if (version)
+    if (str && strlen(str) > 0)
     {
-      version += 1;
-      size_t name_len = strlen(str) - strlen(version);
-      result.version = version_parse(version);
-      char* name = (char*)alloc.allocate(name_len);
-      strncpy(name, str, name_len);
-      name[name_len - 1] = '\0';
-      result.name = name;
-    }
-    else
-    {
-      result.name = strdup(str, alloc);
+      const char* version = strchr(str, package_ref_separator);
+      if (version)
+      {
+        version += 1;
+        size_t name_len = strlen(str) - strlen(version);
+        result.version = version_parse(version);
+        char* name = (char*)alloc.allocate(name_len);
+        strncpy(name, str, name_len);
+        name[name_len - 1] = '\0';
+        result.name = name;
+      }
+      else
+      {
+        result.name = strdup(str, alloc);
+      }
     }
 
     return result;
