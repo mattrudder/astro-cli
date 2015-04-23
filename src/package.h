@@ -31,7 +31,7 @@ namespace astro
   static constexpr char package_ref_separator = '@';
 
   inline package_ref
-  package_ref_parse(const char* str, allocator alloc = allocator::malloc())
+  package_ref_parse(const char* str, allocator alloc = nullptr)
   {
     package_ref result = {};
     if (str && strlen(str) > 0)
@@ -57,7 +57,7 @@ namespace astro
   }
 
   inline package
-  package_from_json(const char* str, allocator alloc = allocator::malloc())
+  package_from_json(const char* str, allocator alloc = nullptr)
   {
     package result = {};
 
@@ -87,7 +87,7 @@ namespace astro
   }
 
   inline package
-  package_from_file(const char* path, allocator alloc = allocator::malloc())
+  package_from_file(const char* path, allocator alloc = nullptr)
   {
     package result = {};
     if (!fs_exists(path))

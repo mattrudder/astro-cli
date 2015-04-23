@@ -25,7 +25,7 @@ namespace astro
   }
 
   inline const char*
-  version_to_string(version ver, allocator alloc = allocator::malloc())
+  version_to_string(version ver, allocator alloc = nullptr)
   {
     int size = std::snprintf(nullptr, 0, version_fmt, ver.major, ver.minor, ver.patch) + 1;
     char* result = (char*)alloc.allocate(size);
