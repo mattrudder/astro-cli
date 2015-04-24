@@ -6,6 +6,9 @@ extern "C"
 #include <fs/fs.c>
 }
 
+#define ASTRO_MAIN_IMPL
+#include <astro/astro.h>
+
 #include "package_tests.h"
 
 /* Add definitions that need to be in the test runner's main file. */

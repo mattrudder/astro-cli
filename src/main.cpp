@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <git2.h>
 #include <curl/curl.h>
-#include <log.h/log.h>
 
 #include <json11/json11.cpp>
 extern "C"
@@ -10,9 +9,12 @@ extern "C"
 #include <fs/fs.c>
 }
 
+#include <astro/astro.h>
 #include <astro/string.h>
 #include "package.h"
 using namespace astro;
+
+astro::log_level astro_log_verbosity = astro::log_level::info;
 
 struct options_t
 {
@@ -31,17 +33,31 @@ void print_library_dependencies()
     git_version[0], git_version[1], git_version[2]);
 }
 
+static void
+set_verbose_logging(command_t *self)
+{
+  astro_log_verbosity = astro::log_level::debug;
+}
+
 int main(int argc, char *argv[])
 {
   options_t options;
   command_t cmd = {};
   command_init(&cmd, argv[0], ASTRO_CLI_VERSION);
-  // command_option(&cmd, "-v", "--verbose", "enable verbose stuff", verbose);
+  command_option(&cmd, "-v", "--verbose", "Make logging more verbose", set_verbose_logging);
   // command_option(&cmd, "-r", "--required <arg>", "required arg", required);
   // command_option(&cmd, "-o", "--optional [arg]", "optional arg", optional);
 
   cmd.data = &options;
   command_parse(&cmd, argc, argv);
+
+  curl_global_init(CURL_GLOBAL_ALL);
+  git_libgit2_init();
+
+  print_library_dependencies();
+
+  git_config *cfg = NULL;
+  int error = git_config_open_default(&cfg);
 
   if (!fs_exists("package.json"))
   {
@@ -55,15 +71,8 @@ int main(int argc, char *argv[])
         deps->name, version_to_string(deps->version));
   }
 
-  curl_global_init(CURL_GLOBAL_ALL);
-  git_libgit2_init();
-
-  print_library_dependencies();
-
-  git_config *cfg = NULL;
-  int error = git_config_open_default(&cfg);
-
   git_libgit2_shutdown();
   curl_global_cleanup();
+  command_free(&cmd);
   return 0;
 }
