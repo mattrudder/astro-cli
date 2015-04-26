@@ -1,4 +1,5 @@
 UNAME := $(shell uname)
+CWD := $(shell pwd)
 ifeq ($(UNAME),$(filter $(UNAME),Linux Darwin))
 	ifeq ($(UNAME),$(filter $(UNAME),Darwin))
 		# TODO: Check for iOS build flags.
@@ -22,19 +23,19 @@ libcurl_LDFLAGS := $(shell curl-config --libs)
 CXXFLAGS += $(libgit2_CFLAGS) $(libcurl_CFLAGS) -DASTRO_CLI_VERSION="\"$(program_VERSION)\""
 LDFLAGS += $(libgit2_LDFLAGS) $(libcurl_LDFLAGS) -all_load
 
-INCLUDE_DIRS := src deps ../astro/include
+INCLUDE_DIRS := $(CWD)/src $(CWD)/deps $(CWD)/../astro/include $(CWD)/../io/include
 LIBRARY_DIRS :=
 LIBRARIES :=
 
-SRC_DIRS := src tests
+SRC_DIRS := $(CWD)/src $(CWD)/tests
 
 program_NAME := astro
-program_SRCS := $(shell find src -type f -name '*.cpp')
+program_SRCS := $(shell find $(CWD)/src -type f -name '*.cpp')
 program_OBJS := ${program_SRCS:.cpp=.o}
 program_DEPS := ${program_OBJS:.o=.dep}
 
 test_NAME := astro-tests
-test_SRCS := $(shell find tests -type f -name '*.cpp')
+test_SRCS := $(shell find $(CWD)/tests -type f -name '*.cpp')
 test_OBJS := ${test_SRCS:.cpp=.o}
 test_DEPS := ${test_OBJS:.o=.dep}
 
@@ -51,7 +52,7 @@ LDFLAGS += $(foreach lib,$(LIBRARIES),-l$(lib))
 
 .PHONY: all clean distclean
 
-all: $(program_NAME) $(test_NAME)
+all: generate_linter_flags $(program_NAME) $(test_NAME)
 
 -include $(program_DEPS)
 
@@ -68,6 +69,9 @@ $(program_NAME): $(program_OBJS)
 
 $(test_NAME): $(test_OBJS)
 	$(LINK.cc) $(test_OBJS) -o $(test_NAME)
+
+generate_linter_flags: Makefile
+	echo "$(CXXFLAGS)" | tr ' ' '\n' > .linter-clang-flags
 
 clean:
 	@- $(RM) $(program_NAME)

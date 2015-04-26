@@ -1,23 +1,39 @@
 #include <stdio.h>
 #include <git2.h>
 #include <curl/curl.h>
-
 #include <json11/json11.cpp>
-extern "C"
-{
-#include <commander/commander.c>
-#include <fs/fs.c>
-}
 
 #include <astro/astro.h>
 #include <astro/string.h>
 #include "package.h"
+#include "install.h"
 using namespace astro;
+using namespace std;
+using namespace std::placeholders;
 
-astro::log_level astro_log_verbosity = astro::log_level::info;
+astro::log_level astro_log_verbosity = astro::log_level::debug;
+
+bool
+print_usage(int argc, const char** argv, bool print_description);
 
 struct options_t
 {
+};
+
+struct command
+{
+  const char* name;
+  const char* description;
+  std::function<int (int, const char **)> handler;
+  const char* short_name;
+  bool option;
+};
+
+command commands[] =
+{
+  { "help", "", std::bind(&print_usage, _1, _2, false), nullptr },
+  { nullptr, "", std::bind(&print_usage, _1, _2, true), "-l" },
+  { "install", "Install packages", install_packages, nullptr },
 };
 
 void print_library_dependencies()
@@ -33,23 +49,68 @@ void print_library_dependencies()
     git_version[0], git_version[1], git_version[2]);
 }
 
-static void
-set_verbose_logging(command_t *self)
+bool
+print_usage(int argc, const char** argv, bool print_description = false)
 {
-  astro_log_verbosity = astro::log_level::debug;
+  fprintf(stderr,
+    "Usage: astro <command>\n"
+    "\n"
+    "where <command> is one of:\n");
+
+  int line_len = 0;
+  command* cmd = commands;
+  size_t command_len = ASTRO_COUNTOF(commands);
+  for (size_t i = 0; i < command_len; ++i, ++cmd)
+  {
+    if (!cmd->name)
+      continue;
+
+    if (print_description)
+    {
+      fprintf(stderr,
+        "\n%s\t%s", cmd->name, cmd->description);
+    }
+    else
+    {
+      const char* prefix = i == 0 ? "  " : "";
+      if (line_len >= 80)
+      {
+        line_len = 0;
+        prefix = "\n  ";
+      }
+
+      line_len += fprintf(stderr,
+        "%s%s%s",
+        prefix,
+        cmd->name,
+        (i + 1) < command_len ? ", " : "");
+    }
+
+  }
+
+  fprintf(stderr,
+    "\n\n"
+    "astro <command> -h  quick help on <command>\n"
+    "\n"
+    "astro@%s\n", ASTRO_CLI_VERSION);
+
+  return false;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char** argv)
 {
-  options_t options;
-  command_t cmd = {};
-  command_init(&cmd, argv[0], ASTRO_CLI_VERSION);
-  command_option(&cmd, "-v", "--verbose", "Make logging more verbose", set_verbose_logging);
-  // command_option(&cmd, "-r", "--required <arg>", "required arg", required);
-  // command_option(&cmd, "-o", "--optional [arg]", "optional arg", optional);
+  argc -= 1;
+  argv += 1;
 
-  cmd.data = &options;
-  command_parse(&cmd, argc, argv);
+  if (argc < 1 || !argv[0] || strcmp("help", argv[0]) == 0)
+  {
+    print_usage(argc, argv);
+    return 0;
+  }
+  else if (strcmp("-v", argv[0]) == 0) // TODO: Handle this anywhere in the arg list.
+  {
+    astro_log_verbosity = log_level::debug;
+  }
 
   curl_global_init(CURL_GLOBAL_ALL);
   git_libgit2_init();
@@ -59,20 +120,33 @@ int main(int argc, char *argv[])
   git_config *cfg = NULL;
   int error = git_config_open_default(&cfg);
 
-  if (!fs_exists("package.json"))
+  command* running_cmd = nullptr;
+  size_t command_len = ASTRO_COUNTOF(commands);
+  for (size_t i = 0; i < command_len && argc > 0; ++i)
   {
-    auto pkg = package_from_file("package.json");
+    command* cmd = commands + i;
+    if ((cmd->name && strcmp(cmd->name, argv[0]) == 0)
+      || (cmd->short_name && strcmp(cmd->short_name, argv[0]) == 0))
+    {
+      argc -= 1;
+      argv += 1;
 
-    log_info("Updating package %s", pkg.name);
-
-    auto deps = pkg.dependencies;
-    for (uintptr i = 0; i < pkg.dependency_count; ++i, ++deps)
-      log_info("Found dependency %s, version %s",
-        deps->name, version_to_string(deps->version));
+      running_cmd = commands + i;
+      if (!running_cmd->handler(argc, argv))
+      {
+        break;
+      }
+    }
   }
 
   git_libgit2_shutdown();
   curl_global_cleanup();
-  command_free(&cmd);
+
+  if (!running_cmd)
+  {
+    print_usage(argc, argv);
+    return 1;
+  }
+
   return 0;
 }

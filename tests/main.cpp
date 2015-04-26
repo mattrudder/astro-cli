@@ -1,10 +1,5 @@
 #include <greatest/greatest.h>
 #include <json11/json11.cpp>
-extern "C"
-{
-#include <commander/commander.c>
-#include <fs/fs.c>
-}
 
 #define ASTRO_MAIN_IMPL
 #include <astro/astro.h>

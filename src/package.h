@@ -2,13 +2,12 @@
 #include <astro/astro.h>
 #include <astro/memory.h>
 #include <astro/string.h>
+#include <astro/io/file.h>
 
-extern "C"
-{
-#include <fs/fs.h>
-}
+using namespace astro::io;
 
 #include "version.h"
+
 
 namespace astro
 {
@@ -90,11 +89,11 @@ namespace astro
   package_from_file(const char* path, allocator alloc = nullptr)
   {
     package result = {};
-    if (!fs_exists(path))
+    if (file::exists(path))
     {
-      char* str = fs_read(path);
+      const char* str = file::read_all_text(path, alloc);
       result = package_from_json(str, alloc);
-      free(str);
+      alloc.deallocate((void*)str);
     }
 
     return result;
