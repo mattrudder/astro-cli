@@ -23,7 +23,7 @@ libcurl_LDFLAGS := $(shell curl-config --libs)
 CXXFLAGS += $(libgit2_CFLAGS) $(libcurl_CFLAGS) -DASTRO_CLI_VERSION="\"$(program_VERSION)\""
 LDFLAGS += $(libgit2_LDFLAGS) $(libcurl_LDFLAGS) -all_load
 
-INCLUDE_DIRS := $(CWD)/src $(CWD)/deps $(CWD)/../astro/include $(CWD)/../io/include
+INCLUDE_DIRS := $(CWD)/src $(CWD)/deps $(CWD)/../astro/include
 LIBRARY_DIRS :=
 LIBRARIES :=
 

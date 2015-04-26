@@ -29,8 +29,9 @@ namespace astro
 
   static constexpr char package_ref_separator = '@';
 
+  template <typename Allocator = allocator<const char>>
   inline package_ref
-  package_ref_parse(const char* str, allocator alloc = nullptr)
+  package_ref_parse(const char* str, Allocator alloc = Allocator())
   {
     package_ref result = {};
     if (str && strlen(str) > 0)
@@ -55,8 +56,9 @@ namespace astro
     return result;
   }
 
+  template <typename Allocator = allocator<const char>>
   inline package
-  package_from_json(const char* str, allocator alloc = nullptr)
+  package_from_json(const char* str, Allocator alloc = Allocator())
   {
     package result = {};
 
@@ -85,15 +87,16 @@ namespace astro
     return result;
   }
 
+  template <typename Allocator = allocator<const char>>
   inline package
-  package_from_file(const char* path, allocator alloc = nullptr)
+  package_from_file(const char* path, Allocator alloc = Allocator())
   {
     package result = {};
     if (file::exists(path))
     {
       const char* str = file::read_all_text(path, alloc);
       result = package_from_json(str, alloc);
-      alloc.deallocate((void*)str);
+      alloc.deallocate(str, strlen(str) + 1);
     }
 
     return result;
